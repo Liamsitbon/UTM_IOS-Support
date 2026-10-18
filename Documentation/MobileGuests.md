@@ -11,8 +11,8 @@ replacing current UTM with an older branch.
 Create a VM and choose **iPhone, iPod touch and iPad (Experimental)** in the OS
 picker. The same SwiftUI entry is compiled into macOS, iOS, iOS-SE and iOS-Remote,
 including their visionOS builds. TrollStore and jailbroken distributions use the
-iOS adapter, with the existing UTM JIT admission check. This does not introduce
-new signing, installation or host-security changes.
+iOS adapter, with the existing UTM JIT admission check. Installation and host
+security policy changes remain outside this adapter.
 
 LightTouch runs the separate qemu-ios engine in a background thread, with a BGRA
 display, normalized single-touch input, Home/Power, pause/resume and stop. It
@@ -36,6 +36,8 @@ so LightTouch can run when the full app has no JIT admission, including HV-only
 packages. This is slower than JIT; the ordinary UTM QEMU engine is unchanged.
 Mac LightTouch builds retain JIT. Custom full mobile builds can still stage a
 matching JIT engine when host admission is available.
+The Mac app carries `com.apple.security.cs.allow-jit` for the embedded LightTouch
+engine, matching the entitlement already used by UTM's separate QEMU launcher.
 
 On Apple Silicon macOS 15+, the vphone adapter launches an existing machine using
 a user-selected complete `VPhone.bundle` and VM library. Arguments are passed as
