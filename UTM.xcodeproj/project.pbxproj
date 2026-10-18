@@ -3996,6 +3996,7 @@
             name = "Embed LightTouch";
             outputPaths = ();
             runOnlyForDeploymentPostprocessing = 0;
+            sandboxingOverride = disabled;
             shellPath = /bin/sh;
             shellScript = "\"${SRCROOT}/scripts/embed_lighttouch.sh\"\n";
         };
@@ -4008,6 +4009,7 @@
             name = "Embed LightTouch";
             outputPaths = ();
             runOnlyForDeploymentPostprocessing = 0;
+            sandboxingOverride = disabled;
             shellPath = /bin/sh;
             shellScript = "\"${SRCROOT}/scripts/embed_lighttouch.sh\"\n";
         };
@@ -4020,6 +4022,7 @@
             name = "Embed LightTouch";
             outputPaths = ();
             runOnlyForDeploymentPostprocessing = 0;
+            sandboxingOverride = disabled;
             shellPath = /bin/sh;
             shellScript = "\"${SRCROOT}/scripts/embed_lighttouch.sh\"\n";
         };
@@ -4032,6 +4035,7 @@
             name = "Embed LightTouch";
             outputPaths = ();
             runOnlyForDeploymentPostprocessing = 0;
+            sandboxingOverride = disabled;
             shellPath = /bin/sh;
             shellScript = "\"${SRCROOT}/scripts/embed_lighttouch.sh\"\n";
         };

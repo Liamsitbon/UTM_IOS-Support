@@ -10,6 +10,7 @@ import hashlib
 import json
 import pathlib
 import plistlib
+import re
 import shlex
 import subprocess
 
@@ -49,7 +50,9 @@ def main():
     if output.exists():
         parser.error("choose a new output directory; existing artifacts are never overwritten")
     config = (build / "config-host.h").read_text()
-    interpreter = "#define CONFIG_TCG_INTERPRETER 1" in config
+    # Meson represents boolean true with a valueless #define in this QEMU
+    # version. Match both that form and an explicit 1, never #undef or 0.
+    interpreter = re.search(r"^\s*#\s*define\s+CONFIG_TCG_INTERPRETER(?:[ \t]+1)?[ \t]*$", config, re.M) is not None
     if args.require_interpreter and not interpreter:
         parser.error("this QEMU build uses JIT, not the TCG interpreter")
     subprocess.run(["ninja", "qemu-system-arm"], cwd=build, check=True)
