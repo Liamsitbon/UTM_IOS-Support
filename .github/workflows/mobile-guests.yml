@@ -84,7 +84,7 @@ jobs:
         run: brew install meson ninja pkg-config nasm ldid dpkg
       - name: Restore LightTouch engine cache
         id: engine-cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ci-work/stage
           key: lighttouch-v1-${{ matrix.sdk }}-${{ matrix.arch }}-${{ matrix.interpreter }}-${{ hashFiles('scripts/*lighttouch*', 'patches/lighttouch/**', 'Documentation/MobileGuests.sources.json') }}
@@ -99,6 +99,12 @@ jobs:
             --sysroot "$UTM_NATIVE_SYSROOT" --work "$RUNNER_TEMP/utm-lighttouch" ${FLAGS:+"$FLAGS"} 2>&1 | tee lighttouch-build.log
           mkdir -p ci-work
           ditto "$RUNNER_TEMP/utm-lighttouch/stage" ci-work/stage
+      - name: Cache the engine before building the app
+        if: steps.engine-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ci-work/stage
+          key: ${{ steps.engine-cache.outputs.cache-primary-key }}
       - name: Package and publish the engine independently
         run: tar -czf LightTouch-${{ matrix.platform }}-${{ matrix.arch }}.tgz -C ci-work stage
       - uses: actions/upload-artifact@v4

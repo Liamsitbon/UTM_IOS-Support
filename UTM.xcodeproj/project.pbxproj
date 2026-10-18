@@ -3996,7 +3996,6 @@
             name = "Embed LightTouch";
             outputPaths = ();
             runOnlyForDeploymentPostprocessing = 0;
-            sandboxingOverride = disabled;
             shellPath = /bin/sh;
             shellScript = "\"${SRCROOT}/scripts/embed_lighttouch.sh\"\n";
         };
@@ -4009,7 +4008,6 @@
             name = "Embed LightTouch";
             outputPaths = ();
             runOnlyForDeploymentPostprocessing = 0;
-            sandboxingOverride = disabled;
             shellPath = /bin/sh;
             shellScript = "\"${SRCROOT}/scripts/embed_lighttouch.sh\"\n";
         };
@@ -4022,7 +4020,6 @@
             name = "Embed LightTouch";
             outputPaths = ();
             runOnlyForDeploymentPostprocessing = 0;
-            sandboxingOverride = disabled;
             shellPath = /bin/sh;
             shellScript = "\"${SRCROOT}/scripts/embed_lighttouch.sh\"\n";
         };
@@ -4035,7 +4032,6 @@
             name = "Embed LightTouch";
             outputPaths = ();
             runOnlyForDeploymentPostprocessing = 0;
-            sandboxingOverride = disabled;
             shellPath = /bin/sh;
             shellScript = "\"${SRCROOT}/scripts/embed_lighttouch.sh\"\n";
         };
@@ -5314,6 +5310,7 @@
 		CE2D93BC24AD46670059923A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
@@ -5353,6 +5350,7 @@
 		CE2D93BD24AD46670059923A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
@@ -5725,6 +5723,7 @@
 		CEA45FB7263519B5002FA97D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
@@ -5765,6 +5764,7 @@
 		CEA45FB8263519B5002FA97D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
@@ -5846,6 +5846,7 @@
 		CEF7F6D12AEEDCC400E34952 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Remote";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "AccentColor-Remote";
 				CLANG_ENABLE_MODULES = YES;
@@ -5882,6 +5883,7 @@
 		CEF7F6D22AEEDCC400E34952 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Remote";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "AccentColor-Remote";
 				CLANG_ENABLE_MODULES = YES;
