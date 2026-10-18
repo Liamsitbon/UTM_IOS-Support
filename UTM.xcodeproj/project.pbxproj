@@ -1341,6 +1341,10 @@
 		FFB02A90266CB09C006CD71A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = FFB02A8E266CB09C006CD71A /* InfoPlist.strings */; };
 		FFB02A93266CB09C006CD71A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = FFB02A91266CB09C006CD71A /* InfoPlist.strings */; };
 		FFB02A96266CB09C006CD71A /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = FFB02A94266CB09C006CD71A /* Localizable.strings */; };
+		89C4A9955D0543DDA4D0D9B1 /* UTMMobileGuestKit in Frameworks */ = {isa = PBXBuildFile; productRef = 072EB85D1DB740ED9C75414F /* UTMMobileGuestKit */; };
+		46C804BC2BA6423D8842D9EA /* UTMMobileGuestKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2A55F0686A664D1794291055 /* UTMMobileGuestKit */; };
+		BC3A793F1B34490094DDF1BE /* UTMMobileGuestKit in Frameworks */ = {isa = PBXBuildFile; productRef = 961C49ED2E4243A8A7C07EEA /* UTMMobileGuestKit */; };
+		919F2F871765404BBA7928DC /* UTMMobileGuestKit in Frameworks */ = {isa = PBXBuildFile; productRef = 424DE4FA9EC3485D9391AD90 /* UTMMobileGuestKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -2360,6 +2364,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				89C4A9955D0543DDA4D0D9B1 /* UTMMobileGuestKit in Frameworks */,
 				CE2D932C24AD46670059923A /* libgstautodetect.a in Frameworks */,
 				CE2D932D24AD46670059923A /* libgstaudiotestsrc.a in Frameworks */,
 				CE2D932E24AD46670059923A /* libgstvideoconvert.a in Frameworks */,
@@ -2445,6 +2450,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				46C804BC2BA6423D8842D9EA /* UTMMobileGuestKit in Frameworks */,
 				CEA9058925FC69D100801E7C /* usbredirhost.1.framework in Frameworks */,
 				CEA9058A25FC69D100801E7C /* usbredirparser.1.framework in Frameworks */,
 				CEA9053825F981E900801E7C /* usb-1.0.0.framework in Frameworks */,
@@ -2531,6 +2537,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BC3A793F1B34490094DDF1BE /* UTMMobileGuestKit in Frameworks */,
 				CEA45F24263519B5002FA97D /* libgstautodetect.a in Frameworks */,
 				CEA45F25263519B5002FA97D /* libgstaudiotestsrc.a in Frameworks */,
 				CEA45F26263519B5002FA97D /* libgstvideoconvert.a in Frameworks */,
@@ -2618,6 +2625,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				919F2F871765404BBA7928DC /* UTMMobileGuestKit in Frameworks */,
 				CEF7F62E2AEEDCC400E34952 /* libgstautodetect.a in Frameworks */,
 				CEF7F62F2AEEDCC400E34952 /* libgstaudiotestsrc.a in Frameworks */,
 				CEF7F6302AEEDCC400E34952 /* libgstvideoconvert.a in Frameworks */,
@@ -3431,6 +3439,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = CE2D93BB24AD46670059923A /* Build configuration list for PBXNativeTarget "iOS" */;
 			buildPhases = (
+				574775E2848C4A18A7A6BF08 /* Embed LightTouch */,
 				CE2D926924AD46670059923A /* Sources */,
 				CE2D932B24AD46670059923A /* Frameworks */,
 				CE2D936924AD46670059923A /* Resources */,
@@ -3446,6 +3455,7 @@
 			);
 			name = iOS;
 			packageProductDependencies = (
+				072EB85D1DB740ED9C75414F /* UTMMobileGuestKit */,
 				CE020BA624AEDEF000B44AB6 /* Logging */,
 				CE93759824BB821F0074066F /* IQKeyboardManagerSwift */,
 				83993291272F68550059355F /* ZIPFoundation */,
@@ -3467,6 +3477,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = CE2D952924AD48BF0059923A /* Build configuration list for PBXNativeTarget "macOS" */;
 			buildPhases = (
+				4E4D9396ECE94ACA94D6D256 /* Embed LightTouch */,
 				CE2D951824AD48BE0059923A /* Sources */,
 				CE2D951924AD48BE0059923A /* Frameworks */,
 				CE2D951A24AD48BE0059923A /* Resources */,
@@ -3486,6 +3497,7 @@
 			);
 			name = macOS;
 			packageProductDependencies = (
+				2A55F0686A664D1794291055 /* UTMMobileGuestKit */,
 				CE020BA824AEDF3000B44AB6 /* Logging */,
 				8399328F272F4A400059355F /* ZIPFoundation */,
 				848F71E5277A2466006A0240 /* SwiftTerm */,
@@ -3536,6 +3548,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = CEA45FB6263519B5002FA97D /* Build configuration list for PBXNativeTarget "iOS-SE" */;
 			buildPhases = (
+				8860EA1C5E214864B3739F06 /* Embed LightTouch */,
 				CE11C03B2BD46F7600E103A0 /* Generate Info.plist */,
 				CEA45E24263519B5002FA97D /* Sources */,
 				CEA45F23263519B5002FA97D /* Frameworks */,
@@ -3551,6 +3564,7 @@
 			);
 			name = "iOS-SE";
 			packageProductDependencies = (
+				961C49ED2E4243A8A7C07EEA /* UTMMobileGuestKit */,
 				CEA45E20263519B5002FA97D /* Logging */,
 				CEA45E22263519B5002FA97D /* IQKeyboardManagerSwift */,
 				83993293272F685F0059355F /* ZIPFoundation */,
@@ -3591,6 +3605,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = CEF7F6D02AEEDCC400E34952 /* Build configuration list for PBXNativeTarget "iOS-Remote" */;
 			buildPhases = (
+				86A230581D8847098D4CFBDD /* Embed LightTouch */,
 				CEF7F5962AEEDCC400E34952 /* Sources */,
 				CEF7F62D2AEEDCC400E34952 /* Frameworks */,
 				CEF7F6782AEEDCC400E34952 /* Resources */,
@@ -3603,6 +3618,7 @@
 			);
 			name = "iOS-Remote";
 			packageProductDependencies = (
+				424DE4FA9EC3485D9391AD90 /* UTMMobileGuestKit */,
 				CEF7F5842AEEDCC400E34952 /* Logging */,
 				CEF7F5862AEEDCC400E34952 /* IQKeyboardManagerSwift */,
 				CEF7F5882AEEDCC400E34952 /* ZIPFoundation */,
@@ -3680,6 +3696,7 @@
 			);
 			mainGroup = CE550BC0225947990063E575;
 			packageReferences = (
+				E7842AB68A77434798761F00 /* XCLocalSwiftPackageReference "UTMMobileGuestKit" */,
 				CE020BA524AEDEF000B44AB6 /* XCRemoteSwiftPackageReference "swift-log" */,
 				CE93759724BB821F0074066F /* XCRemoteSwiftPackageReference "IQKeyboardManager" */,
 				8399328E272F4A400059355F /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
@@ -3970,6 +3987,54 @@
 			shellScript = "#!/bin/sh\n\nPLISTBUDDY=/usr/libexec/PlistBuddy\nROOT_PLIST=\"$SCRIPT_OUTPUT_FILE_0\"\n\nCOUNT=$($PLISTBUDDY -c \"Print :PreferenceSpecifiers\" \"$ROOT_PLIST\" | grep -c '^    }$')\n\nfor ((i = 0; i < COUNT; i++)); do\n    remove=0\n    platform=$($PLISTBUDDY -c \"Print :PreferenceSpecifiers:$i:Platform\" \"$ROOT_PLIST\" 2> /dev/null)\n    if [ ! -z \"$platform\" ]; then\n        if [ \"$platform\" == \"$PLATFORM_FAMILY_NAME\" ]; then\n            echo \"Found entry $i for $platform\"\n            $PLISTBUDDY -c \"Delete :PreferenceSpecifiers:$i:Platform\" \"$ROOT_PLIST\"\n        else\n            echo \"Exclude $i due to Platform\"\n            remove=1\n        fi\n    fi\n    excludetargets=$($PLISTBUDDY -c \"Print :PreferenceSpecifiers:$i:ExcludeTargets\" \"$ROOT_PLIST\" 2> /dev/null | sed '1d;$d' | xargs)\n    if [ ! -z \"$excludetargets\" ]; then\n        found=0\n        for target in $excludetargets; do\n            if [ \"$target\" == \"$TARGET_NAME\" ]; then\n                found=1\n            fi\n        done\n        if [ $found -eq 1 ]; then\n            echo \"Exclude $i due to ExcludeTargets\"\n            remove=1\n        else\n            echo \"Found entry $i for ExcludeTargets\"\n            $PLISTBUDDY -c \"Delete :PreferenceSpecifiers:$i:ExcludeTargets\" \"$ROOT_PLIST\"\n        fi\n    fi\n    if [ $remove -eq 1 ]; then\n        echo \"Removing entry $i\"\n        $PLISTBUDDY -c \"Delete :PreferenceSpecifiers:$i\" \"$ROOT_PLIST\"\n        ((COUNT--))\n        ((i--))\n    fi\ndone\n";
 			showEnvVarsInLog = 0;
 		};
+		574775E2848C4A18A7A6BF08 /* Embed LightTouch */ = {
+            isa = PBXShellScriptBuildPhase;
+            alwaysOutOfDate = 1;
+            buildActionMask = 2147483647;
+            files = ();
+            inputPaths = ();
+            name = "Embed LightTouch";
+            outputPaths = ();
+            runOnlyForDeploymentPostprocessing = 0;
+            shellPath = /bin/sh;
+            shellScript = "\"${SRCROOT}/scripts/embed_lighttouch.sh\"\n";
+        };
+		4E4D9396ECE94ACA94D6D256 /* Embed LightTouch */ = {
+            isa = PBXShellScriptBuildPhase;
+            alwaysOutOfDate = 1;
+            buildActionMask = 2147483647;
+            files = ();
+            inputPaths = ();
+            name = "Embed LightTouch";
+            outputPaths = ();
+            runOnlyForDeploymentPostprocessing = 0;
+            shellPath = /bin/sh;
+            shellScript = "\"${SRCROOT}/scripts/embed_lighttouch.sh\"\n";
+        };
+		8860EA1C5E214864B3739F06 /* Embed LightTouch */ = {
+            isa = PBXShellScriptBuildPhase;
+            alwaysOutOfDate = 1;
+            buildActionMask = 2147483647;
+            files = ();
+            inputPaths = ();
+            name = "Embed LightTouch";
+            outputPaths = ();
+            runOnlyForDeploymentPostprocessing = 0;
+            shellPath = /bin/sh;
+            shellScript = "\"${SRCROOT}/scripts/embed_lighttouch.sh\"\n";
+        };
+		86A230581D8847098D4CFBDD /* Embed LightTouch */ = {
+            isa = PBXShellScriptBuildPhase;
+            alwaysOutOfDate = 1;
+            buildActionMask = 2147483647;
+            files = ();
+            inputPaths = ();
+            name = "Embed LightTouch";
+            outputPaths = ();
+            runOnlyForDeploymentPostprocessing = 0;
+            shellPath = /bin/sh;
+            shellScript = "\"${SRCROOT}/scripts/embed_lighttouch.sh\"\n";
+        };
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -5958,6 +6023,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+        E7842AB68A77434798761F00 /* XCLocalSwiftPackageReference "UTMMobileGuestKit" */ = {
+            isa = XCLocalSwiftPackageReference;
+            relativePath = Packages/UTMMobileGuestKit;
+        };
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		8399328E272F4A400059355F /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -6362,6 +6434,10 @@
 			package = 84B36D1C27B3261E00C22685 /* XCRemoteSwiftPackageReference "CocoaSpice" */;
 			productName = CocoaSpiceNoUsb;
 		};
+		072EB85D1DB740ED9C75414F /* UTMMobileGuestKit */ = {isa = XCSwiftPackageProductDependency; package = E7842AB68A77434798761F00 /* XCLocalSwiftPackageReference "UTMMobileGuestKit" */; productName = UTMMobileGuestKit; };
+		2A55F0686A664D1794291055 /* UTMMobileGuestKit */ = {isa = XCSwiftPackageProductDependency; package = E7842AB68A77434798761F00 /* XCLocalSwiftPackageReference "UTMMobileGuestKit" */; productName = UTMMobileGuestKit; };
+		961C49ED2E4243A8A7C07EEA /* UTMMobileGuestKit */ = {isa = XCSwiftPackageProductDependency; package = E7842AB68A77434798761F00 /* XCLocalSwiftPackageReference "UTMMobileGuestKit" */; productName = UTMMobileGuestKit; };
+		424DE4FA9EC3485D9391AD90 /* UTMMobileGuestKit */ = {isa = XCSwiftPackageProductDependency; package = E7842AB68A77434798761F00 /* XCLocalSwiftPackageReference "UTMMobileGuestKit" */; productName = UTMMobileGuestKit; };
 /* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = CE550BC1225947990063E575 /* Project object */;

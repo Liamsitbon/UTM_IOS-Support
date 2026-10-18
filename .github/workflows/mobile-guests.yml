@@ -1,0 +1,178 @@
+name: Build Experimental iOS Guests
+on:
+  push:
+    branches: ['codex/ios-support-experimental']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mobile-guests-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  adapters:
+    name: Adapter tests and SDK compilation
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test storage protection and SE interpreter admission
+        run: |
+          swift test --build-system native --package-path Packages/UTMMobileGuestKit -j 2
+          xcrun xctest Packages/UTMMobileGuestKit/.build/debug/UTMMobileGuestKitPackageTests.xctest
+      - name: Compile iOS adapter
+        run: >-
+          swift build --package-path Packages/UTMMobileGuestKit --target UTMMobileGuestKit
+          --triple arm64-apple-ios15.0 --sdk "$(xcrun --sdk iphoneos --show-sdk-path)"
+          --scratch-path "$RUNNER_TEMP/mobile-ios" -j 2
+      - name: Compile visionOS adapter
+        run: >-
+          swift build --package-path Packages/UTMMobileGuestKit --target UTMMobileGuestKit
+          --triple arm64-apple-xros1.0 --sdk "$(xcrun --sdk xros --show-sdk-path)"
+          --scratch-path "$RUNNER_TEMP/mobile-vision" -j 2
+      - name: Validate project and scripts
+        run: |
+          plutil -lint UTM.xcodeproj/project.pbxproj
+          sh -n scripts/embed_lighttouch.sh
+          python3 -m py_compile scripts/*lighttouch*.py
+  apps:
+    name: UTM ${{ matrix.edition }} / ${{ matrix.platform }} / ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - {edition: Full-TrollStore-JB, sdk: iphoneos, platform: ios, scheme: iOS, arch: arm64, interpreter: false, runner: macos-26}
+          - {edition: SE, sdk: iphoneos, platform: ios-tci, scheme: iOS-SE, arch: arm64, interpreter: true, runner: macos-26}
+          - {edition: Remote, sdk: iphoneos, platform: ios-tci, scheme: iOS-Remote, arch: arm64, interpreter: true, runner: macos-26}
+          - {edition: Full, sdk: xros, platform: visionos, scheme: iOS, arch: arm64, interpreter: false, runner: macos-26}
+          - {edition: SE, sdk: xros, platform: visionos-tci, scheme: iOS-SE, arch: arm64, interpreter: true, runner: macos-26}
+          - {edition: Remote, sdk: xros, platform: visionos-tci, scheme: iOS-Remote, arch: arm64, interpreter: true, runner: macos-26}
+          - {edition: Mac-vphone, sdk: macosx, platform: macos, scheme: macOS, arch: arm64, interpreter: false, runner: macos-26}
+          - {edition: Mac-Intel, sdk: macosx, platform: macos, scheme: macOS, arch: x86_64, interpreter: false, runner: macos-26-intel}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download matching prebuilt UTM native dependencies
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: utmapp/UTM
+          run-id: 38996133972
+          name: Sysroot-${{ matrix.platform }}-${{ matrix.arch }}
+          path: upstream-sysroot
+      - name: Unpack dependencies and record the source
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar -xf upstream-sysroot/sysroot.tgz
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          roots = [p.resolve() for p in Path('.').glob('sysroot-*') if p.is_dir()]
+          if len(roots) != 1:
+              raise RuntimeError(f'Expected one sysroot, found {roots}')
+          with open(os.environ['GITHUB_ENV'], 'a') as env:
+              env.write(f'UTM_NATIVE_SYSROOT={roots[0]}\n')
+          PY
+          xcodebuild -version
+          df -h .
+      - name: Install build tools on this disposable runner
+        run: brew install meson ninja pkg-config nasm ldid dpkg
+      - name: Restore LightTouch engine cache
+        id: engine-cache
+        uses: actions/cache@v4
+        with:
+          path: ci-work/stage
+          key: lighttouch-v1-${{ matrix.sdk }}-${{ matrix.arch }}-${{ matrix.interpreter }}-${{ hashFiles('scripts/*lighttouch*', 'Documentation/MobileGuests.sources.json') }}
+      - name: Build LightTouch engine and patched native dependencies
+        if: steps.engine-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          FLAGS=()
+          if [ '${{ matrix.interpreter }}' = true ]; then FLAGS+=(--interpreter); fi
+          python3 scripts/build_lighttouch_ci.py --sdk '${{ matrix.sdk }}' --arch '${{ matrix.arch }}' \
+            --sysroot "$UTM_NATIVE_SYSROOT" --work "$RUNNER_TEMP/utm-lighttouch" "${FLAGS[@]}" 2>&1 | tee lighttouch-build.log
+          mkdir -p ci-work
+          ditto "$RUNNER_TEMP/utm-lighttouch/stage" ci-work/stage
+      - name: Package and publish the engine independently
+        run: tar -czf LightTouch-${{ matrix.platform }}-${{ matrix.arch }}.tgz -C ci-work stage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LightTouch-${{ matrix.edition }}-${{ matrix.platform }}-${{ matrix.arch }}
+          path: LightTouch-*.tgz
+          if-no-files-found: error
+      - name: Fetch pinned vphone source
+        if: matrix.edition == 'Mac-vphone'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/vphone"
+          git -C "$RUNNER_TEMP/vphone" remote add origin https://github.com/Lakr233/vphone-cli.git
+          git -C "$RUNNER_TEMP/vphone" fetch --depth=1 origin 23095c8e7f9db9bdfbc51ff2bbda7e4be502ef25
+          git -C "$RUNNER_TEMP/vphone" checkout --detach FETCH_HEAD
+      - name: Build and validate VPhone.bundle
+        if: matrix.edition == 'Mac-vphone'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/vphone"
+          xcodebuild -workspace VPhone.xcworkspace -scheme VPhone -configuration Debug \
+            -destination 'platform=macOS,arch=arm64' -derivedDataPath "$RUNNER_TEMP/vphone-build" build 2>&1 | tee "$GITHUB_WORKSPACE/vphone-build.log"
+          test -d "$RUNNER_TEMP/vphone-build/Build/Products/Debug/VPhone.bundle"
+          tar -czf "$GITHUB_WORKSPACE/VPhone.bundle.tgz" -C "$RUNNER_TEMP/vphone-build/Build/Products/Debug" VPhone.bundle
+      - uses: actions/upload-artifact@v4
+        if: matrix.edition == 'Mac-vphone'
+        with:
+          name: VPhone-macOS-arm64
+          path: VPhone.bundle.tgz
+          if-no-files-found: error
+      - name: Archive UTM with the matching LightTouch engine
+        env:
+          LTM_RUNTIME_DIR: ${{ github.workspace }}/ci-work/stage
+          LTM_REQUIRED: '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./scripts/build_utm.sh -k '${{ matrix.sdk }}' -s '${{ matrix.scheme }}' -a '${{ matrix.arch }}' -o UTM 2>&1 | tee utm-build.log
+          if [ '${{ matrix.edition }}' = Mac-vphone ]; then
+            ditto "$RUNNER_TEMP/vphone-build/Build/Products/Debug/VPhone.bundle" \
+              UTM.xcarchive/Products/Applications/UTM.app/Contents/Resources/VPhone.bundle
+          fi
+          tar -czf UTM.xcarchive.tgz UTM.xcarchive
+      - name: Package iOS and visionOS editions
+        if: matrix.sdk != 'macosx'
+        shell: bash
+        run: |
+          set -euo pipefail
+          case '${{ matrix.scheme }}' in
+            iOS-SE) ./scripts/package.sh ipa-se UTM.xcarchive packages/SE ;;
+            iOS-Remote) ./scripts/package.sh ipa-remote UTM.xcarchive packages/Remote ;;
+            iOS)
+              ./scripts/package.sh ipa UTM.xcarchive packages/Full
+              if [ '${{ matrix.sdk }}' = iphoneos ]; then
+                ./scripts/package.sh ipa-hv UTM.xcarchive packages/TrollStore-HV
+                ./scripts/package.sh deb UTM.xcarchive packages/Jailbreak
+              fi
+              ;;
+          esac
+      - name: Publish UTM archives and packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: UTM-${{ matrix.edition }}-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            UTM.xcarchive.tgz
+            packages/**/*.ipa
+            packages/**/*.deb
+          if-no-files-found: error
+      - name: Publish diagnostics even if a build fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Logs-${{ matrix.edition }}-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            *-build.log
+            ${{ runner.temp }}/utm-lighttouch/qemu-build/meson-logs/meson-log.txt
+          if-no-files-found: ignore

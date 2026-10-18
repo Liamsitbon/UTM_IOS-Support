@@ -15,11 +15,19 @@
 //
 
 import SwiftUI
+import UTMMobileGuestKit
 
 struct VMWizardOSView: View {
     @ObservedObject var wizardState: VMWizardState
+    @State private var showsMobileGuests = false
+
     var body: some View {
         VMWizardContent("Operating System") {
+            Section {
+                Button { showsMobileGuests = true } label: {
+                    Label("iPhone, iPod touch and iPad (Experimental)", systemImage: "iphone")
+                }
+            }
             Section {
                 #if os(macOS) && arch(arm64)
                 if wizardState.useVirtualization {
@@ -84,6 +92,13 @@ struct VMWizardOSView: View {
 
         }
         .buttonStyle(.inList)
+        .sheet(isPresented: $showsMobileGuests) {
+            #if WITH_QEMU_TCI
+            MobileGuestView(requireInterpreter: true)
+            #else
+            MobileGuestView(requireInterpreter: !Main.jitAvailable)
+            #endif
+        }
     }
 }
 

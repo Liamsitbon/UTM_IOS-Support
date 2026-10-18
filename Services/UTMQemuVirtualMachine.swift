@@ -15,6 +15,7 @@
 //
 
 import Foundation
+import UTMMobileGuestKit
 import QEMUKit
 #if os(macOS)
 import SwiftPortmap
@@ -442,6 +443,9 @@ extension UTMQemuVirtualMachine {
         
         // start QEMU
         await qemuVM.setDelegate(self)
+        #if !os(macOS)
+        try await MobileGuestProcessOwnership.claim("QEMU")
+        #endif
         try await qemuVM.start(launcher: system, interface: interface)
         let monitor = await monitor!
         try Task.checkCancellation()

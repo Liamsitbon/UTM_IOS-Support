@@ -1,0 +1,6 @@
+{
+  "utm": {"repository": "https://github.com/Liamsitbon/UTM_IOS-Support", "branch": "main", "commit": "535d6592a8bdc22b48de53703a371b80bf60d587"},
+  "lightTouch": {"repository": "https://github.com/samhenrigold/LightTouchMac", "branch": "main", "commit": "d34c3dc7a0870c82ac43241e1ded7c6105e76e44"},
+  "qemuIOS": {"repository": "https://github.com/samhenrigold/qemu-ios", "branch": "main", "commit": "2bd551a3b88d453e81e9a24d401a1cc7ec411690"},
+  "vphone": {"repository": "https://github.com/Lakr233/vphone-cli", "branch": "main", "commit": "23095c8e7f9db9bdfbc51ff2bbda7e4be502ef25"}
+}
