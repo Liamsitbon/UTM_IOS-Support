@@ -11,7 +11,7 @@
 +''', dependencies: host_gles)
 +  host_gles = not_found
 +endif
- 
+
  vmnet = dependency('appleframeworks', modules: 'vmnet', required: get_option('vmnet'))
  if vmnet.found() and not cc.has_header_symbol('vmnet/vmnet.h',
 --- a/hw/arm/gles-host.c
@@ -28,7 +28,7 @@
 +#undef GL_TEXTURE_MAX_LEVEL
 +#define GL_TEXTURE_MAX_LEVEL GL_TEXTURE_MAX_LEVEL_APPLE
  #endif
- 
+
  /* Framebuffer objects are core in ES 1.1's OES form. Same tokens, same
 @@ -1572,6 +1579,10 @@
  #ifndef GLES_HOST_EAGL
@@ -40,7 +40,7 @@
 +#endif
      return type;
  }
- 
+
 @@ -1619,7 +1630,35 @@
  static void gles_unpack_apply(GLint row_length)
  {
@@ -75,11 +75,11 @@
 +    gles_unpack_apply(row_length);
 +#endif
  }
- 
+
  static size_t gles_image_bytes(uint32_t w, uint32_t h, size_t bpp,
 @@ -2690,7 +2729,7 @@
      unsigned faces = object == GL_TEXTURE_CUBE_MAP ? 6 : 1;
- 
+
      if (!gles_debug) return;
 -    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 +    gles_unpack_reset();
@@ -113,7 +113,39 @@
          if (gles_texture_end(target, level, (GLESPVRTCLevel){0})) {
              gles_debug_texture(target);
              return -1;
-@@ -6896,6 +6935,12 @@
+@@ -6592,10 +6631,14 @@
+     }
+     case GLES_SLOT_CLIP_PLANEF: {               /* plane, equation[4] */
+         float p[4];
++        if (!gles_fetch_params(cpu, a[1], 4, p)) return -1;
++#if defined(GLES_HOST_EAGL) && !defined(GLES_HOST_ANGLE)
++        glClipPlanef(a[0], p);
++#else
+         double d[4];
+-        if (!gles_fetch_params(cpu, a[1], 4, p)) return -1;
+         for (unsigned i = 0; i < 4; i++) d[i] = p[i];
+         glClipPlane(a[0], d);
++#endif
+         return 0;
+     }
+
+@@ -6715,10 +6758,14 @@
+     }
+     case 766: {                                 /* glClipPlanex(plane, equation[4]) */
+         float p[4];
++        if (!gles_fetch_xparams(cpu, a[1], 0, 4, p)) return -1;
++#if defined(GLES_HOST_EAGL) && !defined(GLES_HOST_ANGLE)
++        glClipPlanef(a[0], p);
++#else
+         double d[4];
+-        if (!gles_fetch_xparams(cpu, a[1], 0, 4, p)) return -1;
+         for (unsigned i = 0; i < 4; i++) d[i] = p[i];
+         glClipPlane(a[0], d);
++#endif
+         return 0;
+     }
+     case 777: case 778: case 779: case 780: {   /* glGetLightxv, glGetMaterialxv, glGetTexEnvxv, glGetTexParameterxv */
+@@ -6896,6 +6943,12 @@
          memset(gh.txbuf, 0, n);
          glPixelStorei(GL_PACK_ALIGNMENT, (GLint)align);
          glReadPixels(x, y, w, h, fmt, gles_host_type(type), gh.txbuf);
