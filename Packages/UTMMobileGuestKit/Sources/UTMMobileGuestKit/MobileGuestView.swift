@@ -7,6 +7,7 @@ public struct MobileGuestView: View {
     @StateObject private var lightTouch = LightTouchSession.shared
     @StateObject private var vphone = VPhoneSession.shared
     @State private var picker: Selection?
+    @State private var isChoosingFile = false
     @State private var base: URL?
     @State private var bootROM: URL?
     @State private var vphoneBundle: URL?
@@ -41,19 +42,18 @@ public struct MobileGuestView: View {
                     Form {
                         Section("Classic iPhone, iPod touch and iPad") {
                             Text("Import an unpacked device prepared with LightTouch's firmwarekit and its matching boot ROM. Guest changes are stored in UTM's own overlay.")
-                            Button(base?.lastPathComponent ?? "Choose prepared device…") { picker = .base }
-                            Button(bootROM?.lastPathComponent ?? "Choose matching boot ROM…") { picker = .bootROM }
+                            Button(base?.lastPathComponent ?? "Choose prepared device…") { choose(.base) }
+                            Button(bootROM?.lastPathComponent ?? "Choose matching boot ROM…") { choose(.bootROM) }
                             Button("Start LightTouch") { startLightTouch() }
                                 .disabled(base == nil || bootROM == nil || lightTouch.hasStarted)
                             Text(lightTouch.status).font(.caption)
                         }
                         if includesVPhone {
                         Section("iPhone and iPad virtualization") {
-                            Text(VPhoneHostReport.inspect().reason)
                             #if os(macOS) && arch(arm64)
                             if #available(macOS 15, *) {
-                                Button(vphoneBundle?.lastPathComponent ?? "Choose VPhone.bundle…") { picker = .bundle }
-                                Button(vphoneLibrary?.lastPathComponent ?? "Choose VM library…") { picker = .library }
+                                Button(vphoneBundle?.lastPathComponent ?? "Choose VPhone.bundle…") { choose(.bundle) }
+                                Button(vphoneLibrary?.lastPathComponent ?? "Choose VM library…") { choose(.library) }
                                 TextField("Existing VM name", text: $vmName)
                                 Button("Start vphone") { startVPhone() }
                                     .disabled(vphone.isRunning || vphoneBundle == nil || vphoneLibrary == nil || vmName.isEmpty)
@@ -71,7 +71,7 @@ public struct MobileGuestView: View {
             .toolbar { ToolbarItem(placement: .confirmationAction) {
                 Button("Done") { dismiss() }.disabled(lightTouch.isRunning || vphone.isRunning)
             } }
-            .fileImporter(isPresented: Binding(get: { picker != nil }, set: { if !$0 { picker = nil } }),
+            .fileImporter(isPresented: $isChoosingFile,
                           allowedContentTypes: picker == .bootROM ? [.data, .item] : [.folder, .bundle],
                           allowsMultipleSelection: false) { result in
                 let selection = picker
@@ -145,6 +145,11 @@ public struct MobileGuestView: View {
                 lightTouch.button(code, down: false)
             }
         }.disabled(!lightTouch.isRunning)
+    }
+
+    private func choose(_ selection: Selection) {
+        picker = selection
+        isChoosingFile = true
     }
 
     private func startLightTouch() {

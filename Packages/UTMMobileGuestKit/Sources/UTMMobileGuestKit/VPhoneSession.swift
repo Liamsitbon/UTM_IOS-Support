@@ -18,6 +18,8 @@ public struct VPhoneHostReport: Equatable {
         } else {
             reason = "vphone requires macOS 15 or newer."
         }
+        #elseif os(macOS)
+        let reason = "vphone requires an Apple Silicon Mac. LightTouch remains available on Intel."
         #else
         let reason = hasResearch
             ? "Research Guest classes were found. This platform still needs a native vphone VM service and display port; hypervisor access alone does not provide them."

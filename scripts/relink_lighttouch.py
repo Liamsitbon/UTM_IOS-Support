@@ -81,7 +81,10 @@ bool qemu_ios_utm_is_interpreter(void) {
         for flag in ["-MQ", "-MF"]:
             if flag in command:
                 command[command.index(flag) + 1] = obj + (".d" if flag == "-MF" else "")
-        command += ["-I" + str(source / "contrib/ios-app"), "-I" + str(source / "contrib/macos-app")]
+        # system/main.c has no CPU internals, so Meson does not give it the
+        # target include paths. The UI adapter includes ARM CPU/page headers.
+        command += ["-I" + str(build / "target/arm"), "-I" + str(source / "target/arm"),
+                    "-I" + str(source / "contrib/ios-app"), "-I" + str(source / "contrib/macos-app")]
         subprocess.run(command, cwd=build, check=True)
         objects.append(obj)
     framework = output / "LightTouchQEMU.framework"
