@@ -21,7 +21,7 @@ fi
 for FRAMEWORK in "$STAGE"/*.framework; do
     NAME=$(basename "$FRAMEWORK" .framework)
     BINARY="$FRAMEWORK/$NAME"
-    /usr/bin/lipo -verify_arch $ARCHS "$BINARY"
+    /usr/bin/lipo "$BINARY" -verify_arch $ARCHS
     case "$PLATFORM_NAME" in
         macosx) EXPECTED=MACOS ;;
         iphoneos) EXPECTED=IOS ;;

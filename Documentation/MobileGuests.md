@@ -31,6 +31,11 @@ UTM before changing guests. Backgrounding pauses LightTouch and disables its
 host GL executor. SE accepts only a runtime whose compiled interpreter marker is
 true; a JIT engine is refused before launch, even if incorrectly staged in a SE
 sysroot. This uses QEMU's ordinary TCG interpreter, not UTM's custom TCTI patch.
+Actions also bundles this interpreter engine in full iOS/visionOS editions,
+so LightTouch can run when the full app has no JIT admission, including HV-only
+packages. This is slower than JIT; the ordinary UTM QEMU engine is unchanged.
+Mac LightTouch builds retain JIT. Custom full mobile builds can still stage a
+matching JIT engine when host admission is available.
 
 On Apple Silicon macOS 15+, the vphone adapter launches an existing machine using
 a user-selected complete `VPhone.bundle` and VM library. Arguments are passed as

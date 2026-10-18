@@ -43,17 +43,17 @@ jobs:
     timeout-minutes: 180
     strategy:
       fail-fast: false
-      max-parallel: 3
+      max-parallel: 5
       matrix:
         include:
-          - {edition: Full-TrollStore-JB, sdk: iphoneos, platform: ios, scheme: iOS, arch: arm64, interpreter: false, runner: macos-26}
-          - {edition: SE, sdk: iphoneos, platform: ios-tci, scheme: iOS-SE, arch: arm64, interpreter: true, runner: macos-26}
-          - {edition: Remote, sdk: iphoneos, platform: ios-tci, scheme: iOS-Remote, arch: arm64, interpreter: true, runner: macos-26}
-          - {edition: Full, sdk: xros, platform: visionos, scheme: iOS, arch: arm64, interpreter: false, runner: macos-26}
-          - {edition: SE, sdk: xros, platform: visionos-tci, scheme: iOS-SE, arch: arm64, interpreter: true, runner: macos-26}
-          - {edition: Remote, sdk: xros, platform: visionos-tci, scheme: iOS-Remote, arch: arm64, interpreter: true, runner: macos-26}
           - {edition: Mac-vphone, sdk: macosx, platform: macos, scheme: macOS, arch: arm64, interpreter: false, runner: macos-26}
           - {edition: Mac-Intel, sdk: macosx, platform: macos, scheme: macOS, arch: x86_64, interpreter: false, runner: macos-26-intel}
+          - {edition: Full-TrollStore-JB, sdk: iphoneos, platform: ios, scheme: iOS, arch: arm64, interpreter: true, runner: macos-26}
+          - {edition: SE, sdk: iphoneos, platform: ios-tci, scheme: iOS-SE, arch: arm64, interpreter: true, runner: macos-26}
+          - {edition: Remote, sdk: iphoneos, platform: ios-tci, scheme: iOS-Remote, arch: arm64, interpreter: true, runner: macos-26}
+          - {edition: Full, sdk: xros, platform: visionos, scheme: iOS, arch: arm64, interpreter: true, runner: macos-26}
+          - {edition: SE, sdk: xros, platform: visionos-tci, scheme: iOS-SE, arch: arm64, interpreter: true, runner: macos-26}
+          - {edition: Remote, sdk: xros, platform: visionos-tci, scheme: iOS-Remote, arch: arm64, interpreter: true, runner: macos-26}
     steps:
       - uses: actions/checkout@v4
       - name: Download matching prebuilt UTM native dependencies
