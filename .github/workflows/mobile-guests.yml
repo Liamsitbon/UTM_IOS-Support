@@ -8,7 +8,7 @@ permissions:
   actions: read
 concurrency:
   group: mobile-guests-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   adapters:
     name: Adapter tests and SDK compilation
@@ -91,10 +91,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          FLAGS=()
-          if [ '${{ matrix.interpreter }}' = true ]; then FLAGS+=(--interpreter); fi
+          FLAGS=
+          if [ '${{ matrix.interpreter }}' = true ]; then FLAGS=--interpreter; fi
           python3 scripts/build_lighttouch_ci.py --sdk '${{ matrix.sdk }}' --arch '${{ matrix.arch }}' \
-            --sysroot "$UTM_NATIVE_SYSROOT" --work "$RUNNER_TEMP/utm-lighttouch" "${FLAGS[@]}" 2>&1 | tee lighttouch-build.log
+            --sysroot "$UTM_NATIVE_SYSROOT" --work "$RUNNER_TEMP/utm-lighttouch" ${FLAGS:+"$FLAGS"} 2>&1 | tee lighttouch-build.log
           mkdir -p ci-work
           ditto "$RUNNER_TEMP/utm-lighttouch/stage" ci-work/stage
       - name: Package and publish the engine independently
