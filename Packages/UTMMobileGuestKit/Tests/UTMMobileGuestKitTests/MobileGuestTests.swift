@@ -4,6 +4,14 @@ import LightTouchHostRuntime
 @testable import UTMMobileGuestKit
 
 final class MobileGuestTests: XCTestCase {
+    func testOwnershipAllowsSameBackendAndRejectsSwitchingEngines() async throws {
+        try await MainActor.run {
+            try MobileGuestProcessOwnership.claim("QEMU")
+            try MobileGuestProcessOwnership.claim("QEMU")
+            XCTAssertThrowsError(try MobileGuestProcessOwnership.claim("LightTouch"))
+        }
+    }
+
     func testLeaseExcludesAnotherWriterAndPreservesInode() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
