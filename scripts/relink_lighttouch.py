@@ -99,6 +99,13 @@ bool qemu_ios_utm_is_interpreter(void) {
     plist = {"CFBundleIdentifier": "com.utmapp.LightTouchQEMU", "CFBundleName": "LightTouchQEMU",
              "CFBundleExecutable": "LightTouchQEMU", "CFBundlePackageType": "FMWK",
              "CFBundleVersion": "1", "CFBundleShortVersionString": "1.0"}
+    platform_lines = run(["/usr/bin/vtool", "-show-build", str(binary)], build).splitlines()
+    platform = next(line.split()[1] for line in platform_lines if line.strip().startswith("platform "))
+    minimum = next(line.split()[1] for line in platform_lines if line.strip().startswith("minos "))
+    names = {"MACOS": "MacOSX", "IOS": "iPhoneOS", "IOSSIMULATOR": "iPhoneSimulator",
+             "VISIONOS": "XROS", "VISIONOSSIMULATOR": "XRSimulator"}
+    plist["CFBundleSupportedPlatforms"] = [names[platform]]
+    plist["LSMinimumSystemVersion" if platform == "MACOS" else "MinimumOSVersion"] = minimum
     (framework / "Info.plist").write_bytes(plistlib.dumps(plist))
     (output / "runtime.json").write_text(json.dumps({"source": PIN, "interpreter": interpreter}, indent=2) + "\n")
     # These are build artifacts, not yet a distributable closure. Rejecting any

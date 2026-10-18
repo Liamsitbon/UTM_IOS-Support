@@ -26,6 +26,8 @@ def main():
     engine = stage / "LightTouchQEMU.framework/LightTouchQEMU"
     if not engine.is_file():
         parser.error("not a relinked LightTouch stage")
+    engine_plist = plistlib.loads((engine.parent / "Info.plist").read_bytes())
+    platform_info = {key: engine_plist[key] for key in ["CFBundleSupportedPlatforms", "MinimumOSVersion", "LSMinimumSystemVersion"] if key in engine_plist}
     known = {str(engine): (engine, "@rpath/LightTouchQEMU.framework/LightTouchQEMU")}
     pending = [engine]
     records = []
@@ -58,9 +60,9 @@ def main():
                 install_name = "@rpath/" + name + ".framework/" + name
                 subprocess.run(["/usr/bin/install_name_tool", "-id", install_name, str(copied)], check=True)
                 (framework / "Info.plist").write_bytes(plistlib.dumps({
-                    "CFBundleIdentifier": "com.utmapp.lighttouch." + name,
+                    "CFBundleIdentifier": "com.utmapp.lighttouch." + name.replace("_", "-"),
                     "CFBundleExecutable": name, "CFBundlePackageType": "FMWK",
-                    "CFBundleVersion": "1", "CFBundleShortVersionString": "1.0"}))
+                    "CFBundleVersion": "1", "CFBundleShortVersionString": "1.0", **platform_info}))
                 known[dependency] = (copied, install_name)
                 pending.append(copied)
                 records.append({"origin": str(origin), "sha256": digest, "framework": name})

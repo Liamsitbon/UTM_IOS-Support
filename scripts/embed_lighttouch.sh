@@ -26,8 +26,8 @@ for FRAMEWORK in "$STAGE"/*.framework; do
         macosx) EXPECTED=MACOS ;;
         iphoneos) EXPECTED=IOS ;;
         iphonesimulator) EXPECTED=IOSSIMULATOR ;;
-        xros) EXPECTED=XROS ;;
-        xrsimulator) EXPECTED=XROSSIMULATOR ;;
+        xros) EXPECTED=VISIONOS ;;
+        xrsimulator) EXPECTED=VISIONOSSIMULATOR ;;
         *) echo "error: Unknown LightTouch host platform $PLATFORM_NAME" >&2; exit 1 ;;
     esac
     ACTUAL=$(/usr/bin/vtool -show-build "$BINARY" | /usr/bin/awk '$1 == "platform" { print $2 }' | /usr/bin/sort -u)
