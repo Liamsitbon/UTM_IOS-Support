@@ -6,6 +6,7 @@ host headers or changes the configured accelerator. Dependencies must already be
 built for that SDK. See Documentation/MobileGuests.md.
 """
 import argparse
+import hashlib
 import json
 import pathlib
 import plistlib
@@ -34,8 +35,17 @@ def main():
     source, build, output = [p.resolve() for p in (args.source, args.build, args.output)]
     if run(["git", "rev-parse", "HEAD"], source).strip() != PIN:
         parser.error("qemu-ios checkout differs from the integration pin")
-    if run(["git", "status", "--porcelain", "--untracked-files=no"], source).strip():
-        parser.error("qemu-ios checkout has tracked modifications")
+    diff = subprocess.check_output(["git", "diff", "HEAD", "--binary"], cwd=source)
+    provenance = {}
+    if diff:
+        record = build / "utm-source.json"
+        patch = pathlib.Path(__file__).resolve().parent.parent / "patches/lighttouch/qemu-ios-apple-gles.patch"
+        if not record.is_file():
+            parser.error("patched qemu-ios build has no source provenance record")
+        provenance = json.loads(record.read_text())
+        if provenance.get("diff_sha256") != hashlib.sha256(diff).hexdigest() or \
+           provenance.get("patch_sha256") != hashlib.sha256(patch.read_bytes()).hexdigest():
+            parser.error("qemu-ios modifications differ from the recorded portability patch")
     if output.exists():
         parser.error("choose a new output directory; existing artifacts are never overwritten")
     config = (build / "config-host.h").read_text()
@@ -107,7 +117,7 @@ bool qemu_ios_utm_is_interpreter(void) {
     plist["CFBundleSupportedPlatforms"] = [names[platform]]
     plist["LSMinimumSystemVersion" if platform == "MACOS" else "MinimumOSVersion"] = minimum
     (framework / "Info.plist").write_bytes(plistlib.dumps(plist))
-    (output / "runtime.json").write_text(json.dumps({"source": PIN, "interpreter": interpreter}, indent=2) + "\n")
+    (output / "runtime.json").write_text(json.dumps({"source": PIN, "interpreter": interpreter, **provenance}, indent=2) + "\n")
     # These are build artifacts, not yet a distributable closure. Rejecting any
     # external load path is the embed step's responsibility.
     print(binary)

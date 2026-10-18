@@ -1,7 +1,7 @@
 name: Build Experimental iOS Guests
 on:
   push:
-    branches: ['codex/ios-support-experimental']
+    branches: ['main', 'codex/ios-support-experimental']
   workflow_dispatch:
 permissions:
   contents: read
@@ -20,6 +20,8 @@ jobs:
         run: |
           swift test --build-system native --package-path Packages/UTMMobileGuestKit -j 2
           xcrun xctest Packages/UTMMobileGuestKit/.build/debug/UTMMobileGuestKitPackageTests.xctest
+      - name: Test native ES1 pixel transfer layout
+        run: python3 tests/lighttouch/check_transfer.py
       - name: Compile iOS adapter
         run: >-
           swift build --package-path Packages/UTMMobileGuestKit --target UTMMobileGuestKit
@@ -41,7 +43,7 @@ jobs:
     timeout-minutes: 180
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: 3
       matrix:
         include:
           - {edition: Full-TrollStore-JB, sdk: iphoneos, platform: ios, scheme: iOS, arch: arm64, interpreter: false, runner: macos-26}
@@ -85,7 +87,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ci-work/stage
-          key: lighttouch-v1-${{ matrix.sdk }}-${{ matrix.arch }}-${{ matrix.interpreter }}-${{ hashFiles('scripts/*lighttouch*', 'Documentation/MobileGuests.sources.json') }}
+          key: lighttouch-v1-${{ matrix.sdk }}-${{ matrix.arch }}-${{ matrix.interpreter }}-${{ hashFiles('scripts/*lighttouch*', 'patches/lighttouch/**', 'Documentation/MobileGuests.sources.json') }}
       - name: Build LightTouch engine and patched native dependencies
         if: steps.engine-cache.outputs.cache-hit != 'true'
         shell: bash

@@ -121,3 +121,26 @@ If upstream artifacts expire or cross-repository artifact access is refused,
 the download step fails explicitly; restore matching sysroots before rerunning.
 The hosted runner builds vphone but cannot establish physical-Mac guest boot
 support. iOS vphone remains the runtime-capability probe described above.
+
+## Apple renderer portability fixes
+
+The qemu-ios source pin is combined with
+`patches/lighttouch/qemu-ios-apple-gles.patch`. The build records and verifies
+both the patch checksum and the complete patched source diff before relinking.
+Native iOS ES1 repacks guest row strides and converts packed 32-bit pixels
+rather than forwarding unsupported desktop unpack state. The transfer helper
+is tested under AddressSanitizer and UndefinedBehaviorSanitizer. On visionOS,
+Meson checks that the host GL entry points are callable, rather than treating
+SDK framework stubs as an available API. When unavailable, the existing guest
+software-rendering fallback is selected; host GL acceleration is not claimed.
+
+The mobile-guest workflow also runs on main. The upstream general workflow
+remains available through manual/release events in this fork; pushes use the
+mobile-guest workflow and its matching prebuilt sysroots to avoid starting a
+second, redundant native-dependency rebuild.
+
+SE and Remote expose LightTouch only. Full editions expose LightTouch plus
+vphone host capability/launch UI. This edition policy does not make the
+macOS-only Research Guest service available on iOS, visionOS or Intel Macs.
+Local vphone execution there remains unimplemented; the package reports that
+limitation instead of presenting a successful virtual iPhone launch.

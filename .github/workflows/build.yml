@@ -29,6 +29,7 @@ env:
 
 jobs:
   configuration:
+    if: github.repository == 'utmapp/UTM' || github.event_name != 'push'
     name: Setup configuration
     runs-on: ubuntu-latest
     outputs:

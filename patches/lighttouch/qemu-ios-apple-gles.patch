@@ -1,0 +1,159 @@
+--- a/meson.build
++++ b/meson.build
+@@ -1245,6 +1245,13 @@
+                        modules: ['OpenGLES', 'Foundation', 'IOSurface',
+                                  'CoreFoundation'],
+                        required: false)
++# A framework stub in the SDK does not make OpenGLES usable on visionOS.
++if host_gles.found() and not cc.links('''
++  #include <OpenGLES/ES1/gl.h>
++  int main(void) { glBindTexture(GL_TEXTURE_2D, 0); return 0; }
++''', dependencies: host_gles)
++  host_gles = not_found
++endif
+ 
+ vmnet = dependency('appleframeworks', modules: 'vmnet', required: get_option('vmnet'))
+ if vmnet.found() and not cc.has_header_symbol('vmnet/vmnet.h',
+--- a/hw/arm/gles-host.c
++++ b/hw/arm/gles-host.c
+@@ -88,6 +88,13 @@
+ #else
+ #include <OpenGLES/ES1/gl.h>
+ #include <OpenGLES/ES1/glext.h>
++/* ES3 declares shared wire enum values, not support in the ES1 context. */
++#include <OpenGLES/ES3/gl.h>
++#include "gles-ios-transfer.h"
++#define GL_UNSIGNED_INT_8_8_8_8 0x8035
++#define GL_UNSIGNED_INT_8_8_8_8_REV 0x8367
++#undef GL_TEXTURE_MAX_LEVEL
++#define GL_TEXTURE_MAX_LEVEL GL_TEXTURE_MAX_LEVEL_APPLE
+ #endif
+ 
+ /* Framebuffer objects are core in ES 1.1's OES form. Same tokens, same
+@@ -1572,6 +1579,10 @@
+ #ifndef GLES_HOST_EAGL
+     if (type == GLES_HALF_FLOAT_OES) return GL_HALF_FLOAT_ARB;
+ #endif
++#if defined(GLES_HOST_EAGL) && !defined(GLES_HOST_ANGLE)
++    if (type == GL_UNSIGNED_INT_8_8_8_8 ||
++        type == GL_UNSIGNED_INT_8_8_8_8_REV) return GL_UNSIGNED_BYTE;
++#endif
+     return type;
+ }
+ 
+@@ -1619,7 +1630,35 @@
+ static void gles_unpack_apply(GLint row_length)
+ {
+     glPixelStorei(GL_UNPACK_ALIGNMENT, row_length ? 1 : gles_unpack());
++#if !defined(GLES_HOST_EAGL) || defined(GLES_HOST_ANGLE)
+     glPixelStorei(GL_UNPACK_ROW_LENGTH, row_length);
++#endif
++}
++
++static void gles_unpack_reset(void)
++{
++#if !defined(GLES_HOST_EAGL) || defined(GLES_HOST_ANGLE)
++    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
++#endif
++}
++
++static void gles_prepare_upload(const uint8_t *pixels, uint32_t w, uint32_t h,
++                                size_t bpp, GLint row_length, uint32_t type)
++{
++#if defined(GLES_HOST_EAGL) && !defined(GLES_HOST_ANGLE)
++    if (pixels && w && h) {
++        size_t alignment = gles_unpack();
++        size_t stride = row_length ? (size_t)row_length * bpp :
++            ((size_t)w * bpp + alignment - 1) & ~(alignment - 1);
++        ltm_ios_pack_rows((uint8_t *)pixels, w, h, bpp, stride);
++        if (type == GL_UNSIGNED_INT_8_8_8_8) {
++            ltm_ios_reverse_words((uint8_t *)pixels, w, h, (size_t)w * bpp);
++        }
++    }
++    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
++#else
++    gles_unpack_apply(row_length);
++#endif
+ }
+ 
+ static size_t gles_image_bytes(uint32_t w, uint32_t h, size_t bpp,
+@@ -2690,7 +2729,7 @@
+     unsigned faces = object == GL_TEXTURE_CUBE_MAP ? 6 : 1;
+ 
+     if (!gles_debug) return;
+-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
++    gles_unpack_reset();
+     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+     for (unsigned f = 0; f < faces; f++) {
+         glTexImage2D(faces == 6 ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + f : target, 0, GL_RGBA,
+@@ -5832,11 +5871,11 @@
+         }
+         /* The staging buffer reproduces the guest's row padding verbatim, so
+          * the host must unpack with the guest's alignment, not its own. */
+-        gles_unpack_apply(pixels ? row_length : 0);
++        gles_prepare_upload(px, w, h, bpp, pixels ? row_length : 0, type);
+         gles_texture_begin();
+         glTexImage2D(target, level, ifmt == GL_BGRA ? GL_RGBA : ifmt, w, h,
+                      border, fmt, gles_host_type(type), px);
+-        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
++        gles_unpack_reset();
+         if (gles_texture_end(target, level, (GLESPVRTCLevel){0})) {
+             gles_debug_texture(target);
+             return -1;
+@@ -5944,10 +5983,10 @@
+         if (!px) {
+             return -1;
+         }
+-        gles_unpack_apply(row_length);
++        gles_prepare_upload(px, w, h, bpp, row_length, type);
+         gles_texture_begin();
+         glTexSubImage2D(target, level, xoff, yoff, w, h, fmt, gles_host_type(type), px);
+-        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
++        gles_unpack_reset();
+         if (gles_texture_end(target, level, (GLESPVRTCLevel){0})) {
+             gles_debug_texture(target);
+             return -1;
+@@ -6896,6 +6935,12 @@
+         memset(gh.txbuf, 0, n);
+         glPixelStorei(GL_PACK_ALIGNMENT, (GLint)align);
+         glReadPixels(x, y, w, h, fmt, gles_host_type(type), gh.txbuf);
++#if defined(GLES_HOST_EAGL) && !defined(GLES_HOST_ANGLE)
++        if (type == GL_UNSIGNED_INT_8_8_8_8) {
++            size_t stride = ((size_t)w * px + align - 1) & ~(align - 1);
++            ltm_ios_reverse_words(gh.txbuf, w, h, stride);
++        }
++#endif
+         gles_guest_rw(cpu, dst, gh.txbuf, n, 1);
+         return 0;
+     }
+--- /dev/null
++++ b/hw/arm/gles-ios-transfer.h
+@@ -0,0 +1,28 @@
++/* Native ES1 transfer staging; no OpenGL dependency. GPL-2.0-or-later. */
++#ifndef LTM_IOS_TRANSFER_H
++#define LTM_IOS_TRANSFER_H
++#include <stddef.h>
++#include <stdint.h>
++#include <string.h>
++
++static inline void ltm_ios_pack_rows(uint8_t *data, size_t width, size_t height,
++                                     size_t bpp, size_t stride)
++{
++    size_t row = width * bpp;
++    for (size_t y = 1; y < height; y++) {
++        memmove(data + y * row, data + y * stride, row);
++    }
++}
++
++static inline void ltm_ios_reverse_words(uint8_t *data, size_t width,
++                                         size_t height, size_t stride)
++{
++    for (size_t y = 0; y < height; y++) {
++        for (size_t x = 0; x < width; x++) {
++            uint8_t *p = data + y * stride + x * 4;
++            uint8_t a = p[0], b = p[1];
++            p[0] = p[3]; p[1] = p[2]; p[2] = b; p[3] = a;
++        }
++    }
++}
++#endif

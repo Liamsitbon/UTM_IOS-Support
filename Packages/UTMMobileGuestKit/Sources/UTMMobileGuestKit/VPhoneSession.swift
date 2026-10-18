@@ -28,7 +28,7 @@ public struct VPhoneHostReport: Equatable {
 }
 
 @MainActor public final class VPhoneSession: ObservableObject {
-    @Published public private(set) var status = VPhoneHostReport.inspect().reason
+    @Published public private(set) var status = ""
     @Published public private(set) var isRunning = false
     #if os(macOS)
     private var process: Process?
@@ -40,6 +40,8 @@ public struct VPhoneHostReport: Equatable {
 
     public static let shared = VPhoneSession()
     private init() {}
+
+    public func inspectHost() { status = VPhoneHostReport.inspect().reason }
 
     public func launch(bundle: URL, library: URL, name: String) throws {
         #if os(macOS) && arch(arm64)

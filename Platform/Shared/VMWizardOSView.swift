@@ -94,9 +94,9 @@ struct VMWizardOSView: View {
         .buttonStyle(.inList)
         .sheet(isPresented: $showsMobileGuests) {
             #if WITH_QEMU_TCI
-            MobileGuestView(requireInterpreter: true)
+            MobileGuestView(requireInterpreter: true, includesVPhone: false)
             #else
-            MobileGuestView(requireInterpreter: !Main.jitAvailable)
+            MobileGuestView(requireInterpreter: !Main.jitAvailable, includesVPhone: true)
             #endif
         }
     }

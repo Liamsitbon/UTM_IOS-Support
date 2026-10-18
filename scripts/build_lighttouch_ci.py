@@ -42,6 +42,13 @@ def main():
     run(["git", "remote", "add", "origin", "https://github.com/samhenrigold/qemu-ios.git"], source, env)
     run(["git", "fetch", "--depth=1", "origin", "2bd551a3b88d453e81e9a24d401a1cc7ec411690"], source, env)
     run(["git", "checkout", "--detach", "FETCH_HEAD"], source, env)
+    source_patch = repo / "patches/lighttouch/qemu-ios-apple-gles.patch"
+    run(["git", "apply", "--index", source_patch], source, env)
+    diff = subprocess.check_output(["git", "diff", "HEAD", "--binary"], cwd=source)
+    (build / "utm-source.json").write_text(json.dumps({
+        "patch_sha256": hashlib.sha256(source_patch.read_bytes()).hexdigest(),
+        "diff_sha256": hashlib.sha256(diff).hexdigest(),
+    }))
     sdk = subprocess.check_output(["xcrun", "--sdk", args.sdk, "--show-sdk-path"], text=True).strip()
     target = {"macosx": "macos14.4", "iphoneos": "ios15.0", "xros": "xros1.0"}[args.sdk]
     compiler = f"xcrun --sdk {args.sdk} clang -target {args.arch}-apple-{target} -isysroot {shlex.quote(sdk)}"
@@ -107,6 +114,7 @@ def main():
          "--library-root", sysroot / "lib", "--library-root", prefix / "lib", "--library-root", sysroot / "Frameworks"], repo, env)
     licenses = work / "stage/licenses"
     licenses.mkdir()
+    shutil.copyfile(source_patch, licenses / source_patch.name)
     shutil.copyfile(source / "COPYING", licenses / "QEMU-COPYING")
     shutil.copyfile(ffmpeg / "COPYING.LGPLv2.1", licenses / "FFmpeg-COPYING.LGPLv2.1")
     shutil.copyfile(slirp / "COPYRIGHT", licenses / "libslirp-COPYRIGHT")

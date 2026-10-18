@@ -16,9 +16,13 @@ public struct MobileGuestView: View {
     @State private var touching = false
     @State private var backgroundPaused = false
     private let requireInterpreter: Bool
+    private let includesVPhone: Bool
     private enum Selection { case base, bootROM, bundle, library }
 
-    public init(requireInterpreter: Bool) { self.requireInterpreter = requireInterpreter }
+    public init(requireInterpreter: Bool, includesVPhone: Bool) {
+        self.requireInterpreter = requireInterpreter
+        self.includesVPhone = includesVPhone
+    }
 
     public var body: some View {
         NavigationView {
@@ -43,6 +47,7 @@ public struct MobileGuestView: View {
                                 .disabled(base == nil || bootROM == nil || lightTouch.hasStarted)
                             Text(lightTouch.status).font(.caption)
                         }
+                        if includesVPhone {
                         Section("iPhone and iPad virtualization") {
                             Text(VPhoneHostReport.inspect().reason)
                             #if os(macOS) && arch(arm64)
@@ -57,6 +62,7 @@ public struct MobileGuestView: View {
                             }
                             #endif
                             Text(vphone.status).font(.caption).textSelection(.enabled)
+                        }
                         }
                     }
                 }
@@ -86,6 +92,7 @@ public struct MobileGuestView: View {
             } message: { Text(error ?? "") }
         }
         .onAppear {
+            if includesVPhone { vphone.inspectHost() }
             #if os(macOS)
             if let resources = Bundle.main.resourceURL {
                 let candidate = resources.appendingPathComponent("VPhone.bundle")
