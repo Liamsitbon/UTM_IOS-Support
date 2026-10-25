@@ -17,6 +17,18 @@ def output(*args):
     return subprocess.check_output(args, text=True)
 
 
+def version_macos_framework(framework):
+    name = framework.stem
+    version = framework / "Versions/A"
+    resources = version / "Resources"
+    resources.mkdir(parents=True)
+    (framework / name).rename(version / name)
+    (framework / "Info.plist").rename(resources / "Info.plist")
+    (framework / "Versions/Current").symlink_to("A", target_is_directory=True)
+    (framework / name).symlink_to("Versions/Current/" + name)
+    (framework / "Resources").symlink_to("Versions/Current/Resources", target_is_directory=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("stage", type=pathlib.Path)
@@ -67,6 +79,9 @@ def main():
                 pending.append(copied)
                 records.append({"origin": str(origin), "sha256": digest, "framework": name})
             subprocess.run(["/usr/bin/install_name_tool", "-change", dependency, known[dependency][1], str(binary)], check=True)
+    if platform_info.get("CFBundleSupportedPlatforms") == ["MacOSX"]:
+        for framework in sorted({binary.parent for binary, _ in known.values()}):
+            version_macos_framework(framework)
     for binary, _ in known.values():
         subprocess.run(["/usr/bin/codesign", "--force", "--sign", "-", "--timestamp=none", str(binary.parent)], check=True)
     path = stage / "runtime.json"

@@ -22,6 +22,8 @@ jobs:
           xcrun xctest Packages/UTMMobileGuestKit/.build/debug/UTMMobileGuestKitPackageTests.xctest
       - name: Test native ES1 pixel transfer layout
         run: python3 tests/lighttouch/check_transfer.py
+      - name: Test Mac framework closure packaging and embedding
+        run: python3 tests/lighttouch/check_frameworks.py
       - name: Compile iOS adapter
         run: >-
           swift build --package-path Packages/UTMMobileGuestKit --target UTMMobileGuestKit
