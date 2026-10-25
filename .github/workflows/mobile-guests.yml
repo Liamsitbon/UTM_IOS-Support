@@ -12,7 +12,7 @@ concurrency:
 jobs:
   adapters:
     name: Adapter tests and SDK compilation
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
@@ -46,14 +46,14 @@ jobs:
       max-parallel: 5
       matrix:
         include:
-          - {edition: Mac-vphone, sdk: macosx, platform: macos, scheme: macOS, arch: arm64, interpreter: false, runner: macos-26}
-          - {edition: Mac-Intel, sdk: macosx, platform: macos, scheme: macOS, arch: x86_64, interpreter: false, runner: macos-26-intel}
-          - {edition: Full-TrollStore-JB, sdk: iphoneos, platform: ios, scheme: iOS, arch: arm64, interpreter: true, runner: macos-26}
-          - {edition: SE, sdk: iphoneos, platform: ios-tci, scheme: iOS-SE, arch: arm64, interpreter: true, runner: macos-26}
-          - {edition: Remote, sdk: iphoneos, platform: ios-tci, scheme: iOS-Remote, arch: arm64, interpreter: true, runner: macos-26}
-          - {edition: Full, sdk: xros, platform: visionos, scheme: iOS, arch: arm64, interpreter: true, runner: macos-26}
-          - {edition: SE, sdk: xros, platform: visionos-tci, scheme: iOS-SE, arch: arm64, interpreter: true, runner: macos-26}
-          - {edition: Remote, sdk: xros, platform: visionos-tci, scheme: iOS-Remote, arch: arm64, interpreter: true, runner: macos-26}
+          - {edition: Mac-vphone, sdk: macosx, platform: macos, scheme: macOS, arch: arm64, interpreter: false, runner: xcode-27}
+          - {edition: Mac-Intel, sdk: macosx, platform: macos, scheme: macOS, arch: x86_64, interpreter: false, runner: xcode-27}
+          - {edition: Full-TrollStore-JB, sdk: iphoneos, platform: ios, scheme: iOS, arch: arm64, interpreter: true, runner: xcode-27}
+          - {edition: SE, sdk: iphoneos, platform: ios-tci, scheme: iOS-SE, arch: arm64, interpreter: true, runner: xcode-27}
+          - {edition: Remote, sdk: iphoneos, platform: ios-tci, scheme: iOS-Remote, arch: arm64, interpreter: true, runner: xcode-27}
+          - {edition: Full, sdk: xros, platform: visionos, scheme: iOS, arch: arm64, interpreter: true, runner: xcode-27}
+          - {edition: SE, sdk: xros, platform: visionos-tci, scheme: iOS-SE, arch: arm64, interpreter: true, runner: xcode-27}
+          - {edition: Remote, sdk: xros, platform: visionos-tci, scheme: iOS-Remote, arch: arm64, interpreter: true, runner: xcode-27}
     steps:
       - uses: actions/checkout@v4
       - name: Download matching prebuilt UTM native dependencies
@@ -80,6 +80,8 @@ jobs:
           PY
           xcodebuild -version
           df -h .
+      - name: Install the selected Xcode Metal compiler
+        run: xcodebuild -downloadComponent MetalToolchain
       - name: Install build tools on this disposable runner
         run: brew install meson ninja pkg-config nasm ldid dpkg
       - name: Restore LightTouch engine cache

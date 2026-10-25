@@ -151,3 +151,8 @@ vphone host capability/launch UI. This edition policy does not make the
 macOS-only Research Guest service available on iOS, visionOS or Intel Macs.
 Local vphone execution there remains unimplemented; the package reports that
 limitation instead of presenting a successful virtual iPhone launch.
+
+The workflow uses GitHub's Xcode 27 image for the current UTM SDK APIs and
+installs the selected Xcode Metal compiler before archiving. Intel Mac output
+is cross-compiled as x86_64 on the Apple Silicon runner; this is a build check,
+not an Intel hardware run. The legacy mobile target remains iOS 15.
