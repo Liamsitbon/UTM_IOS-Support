@@ -81,6 +81,7 @@ jobs:
               env.write(f'UTM_NATIVE_SYSROOT={roots[0]}\n')
           PY
           xcodebuild -version
+          echo "XCODE_CACHE_ID=$(xcodebuild -version | shasum -a 256 | cut -d' ' -f1)" >> "$GITHUB_ENV"
           df -h .
       - name: Install the selected Xcode Metal compiler
         run: xcodebuild -downloadComponent MetalToolchain
@@ -116,8 +117,15 @@ jobs:
           name: LightTouch-${{ matrix.edition }}-${{ matrix.platform }}-${{ matrix.arch }}
           path: LightTouch-*.tgz
           if-no-files-found: error
-      - name: Fetch pinned vphone source
+      - name: Restore the pinned vphone bundle
         if: matrix.edition == 'Mac-vphone'
+        id: vphone-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ci-work/VPhone.bundle
+          key: vphone-v1-23095c8e7f9db9bdfbc51ff2bbda7e4be502ef25-${{ env.XCODE_CACHE_ID }}
+      - name: Fetch pinned vphone source
+        if: matrix.edition == 'Mac-vphone' && steps.vphone-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -126,7 +134,7 @@ jobs:
           git -C "$RUNNER_TEMP/vphone" fetch --depth=1 origin 23095c8e7f9db9bdfbc51ff2bbda7e4be502ef25
           git -C "$RUNNER_TEMP/vphone" checkout --detach FETCH_HEAD
       - name: Build and validate VPhone.bundle
-        if: matrix.edition == 'Mac-vphone'
+        if: matrix.edition == 'Mac-vphone' && steps.vphone-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -134,7 +142,21 @@ jobs:
           xcodebuild -workspace VPhone.xcworkspace -scheme VPhone -configuration Debug \
             -destination 'platform=macOS,arch=arm64' -derivedDataPath "$RUNNER_TEMP/vphone-build" build 2>&1 | tee "$GITHUB_WORKSPACE/vphone-build.log"
           test -d "$RUNNER_TEMP/vphone-build/Build/Products/Debug/VPhone.bundle"
-          tar -czf "$GITHUB_WORKSPACE/VPhone.bundle.tgz" -C "$RUNNER_TEMP/vphone-build/Build/Products/Debug" VPhone.bundle
+          mkdir -p "$GITHUB_WORKSPACE/ci-work"
+          ditto "$RUNNER_TEMP/vphone-build/Build/Products/Debug/VPhone.bundle" "$GITHUB_WORKSPACE/ci-work/VPhone.bundle"
+      - name: Cache the built vphone bundle
+        if: matrix.edition == 'Mac-vphone' && steps.vphone-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ci-work/VPhone.bundle
+          key: ${{ steps.vphone-cache.outputs.cache-primary-key }}
+      - name: Package the standalone vphone bundle
+        if: matrix.edition == 'Mac-vphone'
+        run: |
+          test -x ci-work/VPhone.bundle/Contents/MacOS/vphone-cli
+          test -x ci-work/VPhone.bundle/Contents/MacOS/vphone-vm
+          codesign --verify --strict ci-work/VPhone.bundle/Contents/MacOS/vphone-vm
+          tar -czf VPhone.bundle.tgz -C ci-work VPhone.bundle
       - uses: actions/upload-artifact@v4
         if: matrix.edition == 'Mac-vphone'
         with:
@@ -150,7 +172,7 @@ jobs:
           set -euo pipefail
           ./scripts/build_utm.sh -k '${{ matrix.sdk }}' -s '${{ matrix.scheme }}' -a '${{ matrix.arch }}' -o UTM 2>&1 | tee utm-build.log
           if [ '${{ matrix.edition }}' = Mac-vphone ]; then
-            ditto "$RUNNER_TEMP/vphone-build/Build/Products/Debug/VPhone.bundle" \
+            ditto ci-work/VPhone.bundle \
               UTM.xcarchive/Products/Applications/UTM.app/Contents/Resources/VPhone.bundle
           fi
           tar -czf UTM.xcarchive.tgz UTM.xcarchive
@@ -170,6 +192,19 @@ jobs:
               fi
               ;;
           esac
+      - name: Package macOS DMG and application ZIP
+        if: matrix.sdk == 'macosx'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p packages/Mac
+          ./scripts/package_mac.sh unsigned UTM.xcarchive packages/Mac 2>&1 | tee mac-package.log
+      - name: Verify distributable contents and generate checksums
+        run: >-
+          python3 scripts/verify_guest_packages.py packages
+          --arch '${{ matrix.arch }}' --platform '${{ matrix.sdk }}'
+          --edition '${{ matrix.edition }}'
+          --vphone-reference '${{ matrix.edition == 'Mac-vphone' && 'ci-work/VPhone.bundle' || '' }}'
       - name: Publish UTM archives and packages
         uses: actions/upload-artifact@v4
         with:
@@ -178,6 +213,9 @@ jobs:
             UTM.xcarchive.tgz
             packages/**/*.ipa
             packages/**/*.deb
+            packages/**/*.dmg
+            packages/**/*.zip
+            packages/SHA256SUMS
           if-no-files-found: error
       - name: Publish diagnostics even if a build fails
         if: always()
@@ -186,5 +224,6 @@ jobs:
           name: Logs-${{ matrix.edition }}-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
             *-build.log
+            mac-package.log
             ${{ runner.temp }}/utm-lighttouch/qemu-build/meson-logs/meson-log.txt
           if-no-files-found: ignore

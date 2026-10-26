@@ -25,7 +25,11 @@ struct VMWizardOSView: View {
         VMWizardContent("Operating System") {
             Section {
                 Button { showsMobileGuests = true } label: {
-                    Label("iPhone, iPod touch and iPad (Experimental)", systemImage: "iphone")
+                    if wizardState.useVirtualization {
+                        Label("iPhone and iPad (vphone)", systemImage: "iphone")
+                    } else {
+                        Label("iPhone, iPod touch and iPad (LightTouch)", systemImage: "iphone")
+                    }
                 }
             }
             Section {
@@ -94,9 +98,10 @@ struct VMWizardOSView: View {
         .buttonStyle(.inList)
         .sheet(isPresented: $showsMobileGuests) {
             #if WITH_QEMU_TCI || WITH_REMOTE
-            MobileGuestView(requireInterpreter: true, includesVPhone: false)
+            MobileGuestView(mode: .emulation, requireInterpreter: true)
             #else
-            MobileGuestView(requireInterpreter: !Main.jitAvailable, includesVPhone: true)
+            MobileGuestView(mode: wizardState.useVirtualization ? .virtualization : .emulation,
+                            requireInterpreter: !Main.jitAvailable)
             #endif
         }
     }

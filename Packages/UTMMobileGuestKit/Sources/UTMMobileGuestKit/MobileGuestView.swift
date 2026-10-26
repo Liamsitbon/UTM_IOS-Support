@@ -2,6 +2,11 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 public struct MobileGuestView: View {
+    public enum Mode: Equatable {
+        case emulation
+        case virtualization
+    }
+
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var lightTouch = LightTouchSession.shared
@@ -17,18 +22,22 @@ public struct MobileGuestView: View {
     @State private var touching = false
     @State private var backgroundPaused = false
     private let requireInterpreter: Bool
-    private let includesVPhone: Bool
+    private let mode: Mode
     private enum Selection { case base, bootROM, bundle, library }
 
-    public init(requireInterpreter: Bool, includesVPhone: Bool) {
+    public init(mode: Mode, requireInterpreter: Bool) {
         self.requireInterpreter = requireInterpreter
-        self.includesVPhone = includesVPhone
+        self.mode = mode
+    }
+
+    private var isRunning: Bool {
+        mode == .emulation ? lightTouch.isRunning : vphone.isRunning
     }
 
     public var body: some View {
         NavigationView {
             VStack {
-                if lightTouch.isRunning || lightTouch.image != nil {
+                if mode == .emulation && (lightTouch.isRunning || lightTouch.image != nil) {
                     display
                     HStack {
                         guestButton("Home", code: 0)
@@ -40,36 +49,38 @@ public struct MobileGuestView: View {
                     Text(lightTouch.status).font(.caption).padding(.bottom)
                 } else {
                     Form {
-                        Section("Classic iPhone, iPod touch and iPad") {
-                            Text("Import an unpacked device prepared with LightTouch's firmwarekit and its matching boot ROM. Guest changes are stored in UTM's own overlay.")
-                            Button(base?.lastPathComponent ?? "Choose prepared device…") { choose(.base) }
-                            Button(bootROM?.lastPathComponent ?? "Choose matching boot ROM…") { choose(.bootROM) }
-                            Button("Start LightTouch") { startLightTouch() }
-                                .disabled(base == nil || bootROM == nil || lightTouch.hasStarted)
-                            Text(lightTouch.status).font(.caption)
-                        }
-                        if includesVPhone {
-                        Section("iPhone and iPad virtualization") {
-                            #if os(macOS) && arch(arm64)
-                            if #available(macOS 15, *) {
-                                Button(vphoneBundle?.lastPathComponent ?? "Choose VPhone.bundle…") { choose(.bundle) }
-                                Button(vphoneLibrary?.lastPathComponent ?? "Choose VM library…") { choose(.library) }
-                                TextField("Existing VM name", text: $vmName)
-                                Button("Start vphone") { startVPhone() }
-                                    .disabled(vphone.isRunning || vphoneBundle == nil || vphoneLibrary == nil || vmName.isEmpty)
-                                Button("Stop vphone") { do { try vphone.stop() } catch { self.error = error.localizedDescription } }
-                                    .disabled(!vphone.isRunning)
+                        if mode == .emulation {
+                            Section("Classic iPhone, iPod touch and iPad") {
+                                Text("Import an unpacked device prepared with LightTouch's firmwarekit and its matching boot ROM. Guest changes are stored in UTM's own overlay.")
+                                Button(base?.lastPathComponent ?? "Choose prepared device…") { choose(.base) }
+                                Button(bootROM?.lastPathComponent ?? "Choose matching boot ROM…") { choose(.bootROM) }
+                                Button("Start LightTouch") { startLightTouch() }
+                                    .disabled(base == nil || bootROM == nil || lightTouch.hasStarted)
+                                Text(lightTouch.status).font(.caption)
                             }
-                            #endif
-                            Text(vphone.status).font(.caption).textSelection(.enabled)
                         }
+                        if mode == .virtualization {
+                            Section("iPhone and iPad virtualization") {
+                                #if os(macOS) && arch(arm64)
+                                if #available(macOS 15, *) {
+                                    Button(vphoneBundle?.lastPathComponent ?? "Choose VPhone.bundle…") { choose(.bundle) }
+                                    Button(vphoneLibrary?.lastPathComponent ?? "Choose VM library…") { choose(.library) }
+                                    TextField("Existing VM name", text: $vmName)
+                                    Button("Start vphone") { startVPhone() }
+                                        .disabled(vphone.isRunning || vphoneBundle == nil || vphoneLibrary == nil || vmName.isEmpty)
+                                    Button("Stop vphone") { do { try vphone.stop() } catch { self.error = error.localizedDescription } }
+                                        .disabled(!vphone.isRunning)
+                                }
+                                #endif
+                                Text(vphone.status).font(.caption).textSelection(.enabled)
+                            }
                         }
                     }
                 }
             }
-            .navigationTitle("iOS Guests — Experimental")
+            .navigationTitle(mode == .emulation ? "iOS Emulation — LightTouch" : "iOS Virtualization — vphone")
             .toolbar { ToolbarItem(placement: .confirmationAction) {
-                Button("Done") { dismiss() }.disabled(lightTouch.isRunning || vphone.isRunning)
+                Button("Done") { dismiss() }.disabled(isRunning)
             } }
             .fileImporter(isPresented: $isChoosingFile,
                           allowedContentTypes: picker == .bootROM ? [.data, .item] : [.folder, .bundle],
@@ -92,7 +103,8 @@ public struct MobileGuestView: View {
             } message: { Text(error ?? "") }
         }
         .onAppear {
-            if includesVPhone { vphone.inspectHost() }
+            guard mode == .virtualization else { return }
+            vphone.inspectHost()
             #if os(macOS)
             if let resources = Bundle.main.resourceURL {
                 let candidate = resources.appendingPathComponent("VPhone.bundle")
@@ -100,8 +112,9 @@ public struct MobileGuestView: View {
             }
             #endif
         }
-        .interactiveDismissDisabled(lightTouch.isRunning || vphone.isRunning)
+        .interactiveDismissDisabled(isRunning)
         .onChange(of: scenePhase) { phase in
+            guard mode == .emulation else { return }
             if phase != .active, lightTouch.isRunning, !lightTouch.isPaused {
                 backgroundPaused = true
                 lightTouch.setPaused(true)

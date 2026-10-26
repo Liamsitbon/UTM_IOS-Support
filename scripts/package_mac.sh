@@ -98,7 +98,7 @@ sed -i '' "s/\$(PRODUCT_BUNDLE_PREFIX:default=com.utmapp)/${PRODUCT_BUNDLE_PREFI
 # ad-hoc sign with the right entitlements
 rm -rf "$INPUT_COPY"
 cp -a "$INPUT" "$INPUT_COPY"
-find "$INPUT_COPY/Products/Applications/UTM.app" -type d -path '*/Frameworks/*.framework' -exec codesign --force --sign - --timestamp=none \{\} \;
+find "$INPUT_COPY/Products/Applications/UTM.app" -path '*/Resources/VPhone.bundle' -prune -o -type d -path '*/Frameworks/*.framework' -exec codesign --force --sign - --timestamp=none \{\} \;
 # nested bundles must be signed before the XPC service that contains them
 codesign --force --sign - --entitlements "$LAUNCHER_ENTITLEMENTS" --timestamp=none --options runtime "$INPUT_COPY/Products/Applications/UTM.app/Contents/XPCServices/QEMUHelper.xpc/Contents/MacOS/QEMULauncher.app/Contents/MacOS/QEMULauncher"
 codesign --force --sign - --entitlements "$RENDERER_ENTITLEMENTS" --timestamp=none --options runtime "$INPUT_COPY/Products/Applications/UTM.app/Contents/XPCServices/QEMUHelper.xpc/Contents/MacOS/QEMURenderServer.app/Contents/MacOS/QEMURenderServer"
@@ -133,7 +133,11 @@ else
 		rm -rf "$RESOURCES"
 	else
 		echo "appdmg not found, falling back to non-customized DMG creation"
-		hdiutil create -fs HFS+ -srcfolder "$SIGNED/UTM.app" -volname "UTM" "$OUTPUT/UTM.dmg"
+		ln -s /Applications "$SIGNED/Applications"
+		hdiutil create -fs HFS+ -format UDZO -srcfolder "$SIGNED" -volname "UTM" "$OUTPUT/UTM.dmg"
 	fi
+fi
+if [ "$MODE" == "unsigned" ]; then
+	ditto -c -k --sequesterRsrc --keepParent "$SIGNED/UTM.app" "$OUTPUT/UTM.zip"
 fi
 rm -rf "$SIGNED"

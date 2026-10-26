@@ -8,8 +8,10 @@ replacing current UTM with an older branch.
 
 ## Implemented paths
 
-Create a VM and choose **iPhone, iPod touch and iPad (Experimental)** in the OS
-picker. The same SwiftUI entry is compiled into macOS, iOS, iOS-SE and iOS-Remote,
+Create a VM, choose **Emulate**, then **iPhone, iPod touch and iPad (LightTouch)**
+in the OS picker. Full editions retain the same emulation path as SE. Choose
+**Virtualize**, then **iPhone and iPad (vphone)** for the separate virtualization
+screen; supported Mac hosts can launch vphone there. The same SwiftUI entry is compiled into macOS, iOS, iOS-SE and iOS-Remote,
 including their visionOS builds. TrollStore and jailbroken distributions use the
 iOS adapter, with the existing UTM JIT admission check. Installation and host
 security policy changes remain outside this adapter.
@@ -156,3 +158,17 @@ The workflow uses GitHub's Xcode 27 image for the current UTM SDK APIs and
 installs the selected Xcode Metal compiler before archiving. Intel Mac output
 is cross-compiled as x86_64 on the Apple Silicon runner; this is a build check,
 not an Intel hardware run. The legacy mobile target remains iOS 15.
+
+## Installable packages
+
+Actions publishes IPA files for iOS and visionOS, separate full and TrollStore/HV
+IPAs plus a jailbreak DEB for full iOS, and a DMG plus application ZIP for each
+Mac architecture. Mac images contain `UTM.app` and an Applications shortcut.
+These Mac packages use ad hoc signatures rather than Developer ID notarization.
+The Apple Silicon Mac package contains both the LightTouch emulation engine and
+the original signed VPhone.bundle. Packaging preserves that bundle byte for byte.
+
+Before upload, each IPA and DEB payload is checked for the app and LightTouch
+engine. Each Mac DMG is verified and mounted read-only, and the app ZIP is
+extracted to check architecture, signatures, framework layout and vphone content.
+Each artifact includes `packages/SHA256SUMS` for its installable files.
